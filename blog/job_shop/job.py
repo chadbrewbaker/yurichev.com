@@ -26,26 +26,24 @@ jobs.append([(5,  88),  (2,  81),  (3,  13),  (6,  82),  (4,  54),  (7,  13),  (
 jobs.append([(9,  88),  (4,  54),  (6,  64),  (7,  32),  (0,  52),  (2,   6),  (8,  54),  (5,  82),  (3,   6),  (1,  26)])
 
 machines=10
-makespan=842
+#makespan=842
 #"""
+makespan = Int('makespan')
+
 
 # two intervals must not overlap with each other:
 def must_not_overlap (s, i1, i2):
     (i1_begin, i1_end)=i1
     (i2_begin, i2_end)=i2
-    s.add(Or(i2_begin>=i1_end, i2_begin<i1_begin))
-    s.add(Or(i2_end>i1_end, i2_end<=i1_begin))
-    (i1_begin, i1_end)=i2
-    (i2_begin, i2_end)=i1
-    s.add(Or(i2_begin>=i1_end, i2_begin<i1_begin))
-    s.add(Or(i2_end>i1_end, i2_end<=i1_begin))
+    s.add(Or(i2_begin>=i1_end, i1_begin>=i2_end))
 
 def all_items_in_list_must_not_overlap_each_other(s, lst):
     # enumerate all pairs using Python itertools:
     for pair in itertools.combinations(lst, r=2):
         must_not_overlap(s, (pair[0][1], pair[0][2]), (pair[1][1], pair[1][2]))
 
-s=Solver()
+s = Optimize()
+s.add(makespan>0) 
 
 # this is placeholder for tasks, to be indexed by machine number:
 tasks_for_machines=[[] for i in range(machines)]
@@ -87,16 +85,20 @@ for tasks_for_machine in tasks_for_machines:
 for jobs_array_tmp in jobs_array:
     all_items_in_list_must_not_overlap_each_other(s, jobs_array_tmp)
 
+h = s.minimize(makespan)
+
 if s.check()==unsat:
     print "unsat"
     exit(0)
+s.lower(h)
 m=s.model()
 
 text_result=[]
 
 # construct Gantt chart:
+ms = m[makespan].as_long()
 for machine in range(machines):
-    st=[None for i in range(makespan)]
+    st=[None for i in range(ms)]
     for task in tasks_for_machines[machine]:
         job=task[0]
         begin=m[task[1]].as_long()
