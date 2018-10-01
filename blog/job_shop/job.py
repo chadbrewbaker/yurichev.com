@@ -30,7 +30,6 @@ machines=10
 #"""
 makespan = Int('makespan')
 
-
 # two intervals must not overlap with each other:
 def must_not_overlap (s, i1, i2):
     (i1_begin, i1_end)=i1
@@ -96,9 +95,9 @@ m=s.model()
 text_result=[]
 
 # construct Gantt chart:
-ms = m[makespan].as_long()
+ms_long = m[makespan].as_long()
 for machine in range(machines):
-    st=[None for i in range(ms)]
+    st=[None for i in range(ms_long)]
     for task in tasks_for_machines[machine]:
         job=task[0]
         begin=m[task[1]].as_long()
